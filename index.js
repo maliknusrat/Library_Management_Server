@@ -625,31 +625,28 @@ cron.schedule("59 * * * *", async () => {
 });
 
 // Penalty Calculation
-cron.schedule("* * * * * *", async () => {
+cron.schedule("* 30 * * * *", async () => {
   // console.log('hit')
   try {
-    // console.log('object');
+      // console.log('object');
       const approveBooks = await new Promise((resolve, reject) => {
         const approveBook = "SELECT * FROM approveBooks";
         db.query(approveBook, (err, results) => {
           // console.log(results);
           if (err) return reject(err);
-          // resolve(results);
+          resolve(results);
         });
       });
 
-      // const offlineBooks = await new Promise((resolve, reject)=>{
-      //   const offlineBook = "SELECT * FROM offlineBooks";
-      //   db.query(offlineBook, (err,results)=>{
-      //     if (err) return reject(err); 
-      //     // resolve(results);
-      //   })
-      // })
-
-      console.log("sanmlk");
+      const offlineBooks = await new Promise((resolve, reject)=>{
+        const offlineBook = "SELECT * FROM offlineBooks";
+        db.query(offlineBook, (err,results)=>{
+          if (err) return reject(err); 
+          resolve(results);
+        })
+      })
 
       for (let index = 0; index < approveBooks.length; index++) {
-        console.log(object);
         const id = approveBooks[index].UUID;
         const expireDate = approveBooks[index].LastReturnDate;
         const issueDate = approveBooks[index].ApproveDate;
@@ -658,7 +655,7 @@ cron.schedule("* * * * * *", async () => {
 
         let dif = dateDifferenceInDays(formattedCurrentDate, issueDate);
 
-        console.log(dif, issueDate, formattedCurrentDate);
+        // console.log(dif, issueDate, formattedCurrentDate);
 
         if (dif > 7 && returnDate == "null") {
           const penaltyAmount = dif * 5;
@@ -666,38 +663,38 @@ cron.schedule("* * * * * *", async () => {
             "UPDATE approveBooks SET Penalty = ? WHERE UUID = ?";
           db.query(penaltyQuery, [penaltyAmount, id], (err, data) => {
             if (err) {
-              console.error("Error updating penalty:", err);
+              // console.error("Error updating penalty:", err);
               return reject(err);
             }
-            console.log("Update approveBooks successful. Affected rows:", data.affectedRows);
+            // console.log("Update approveBooks successful. Affected rows:", data.affectedRows);
             // resolve(data);
           });
         }
       };
       
-      // for (let i = 0; i < offlineBooks.length; i++) {
-      //   console.log("wdesfr");
-      //   const id = offlineBooks[i].UUID;
-      //   const expireDate = offlineBooks[i].ExpireDate;
-      //   const issueDate =offlineBooks[i].IssueDate;
-      //   const returnDate = offlineBooks[i].ReturnDate;
+      for (let i = 0; i < offlineBooks.length; i++) {
+        console.log("wdesfr");
+        const id = offlineBooks[i].UUID;
+        const expireDate = offlineBooks[i].ExpireDate;
+        const issueDate =offlineBooks[i].IssueDate;
+        const returnDate = offlineBooks[i].ReturnDate;
 
-      //   let dif = dateDifferenceInDays(formattedCurrentDate, issueDate);
-      //   console.log(dif, issueDate, formattedCurrentDate);
+        let dif = dateDifferenceInDays(formattedCurrentDate, issueDate);
+        console.log(dif, issueDate, formattedCurrentDate);
 
-      //   if (dif > 7 && returnDate == "null") {
-      //     const penaltyAmount = dif * 5;
-      //     const penaltyQuery ="UPDATE offlineBooks SET Penalty = ? WHERE UUID = ?";
-      //     db.query(penaltyQuery, [penaltyAmount, id], (err, data) => {
-      //       if (err) {
-      //         console.error("Error updating penalty:", err);
-      //         return reject(err);
-      //       }
-      //       console.log("Update offlineBooks successful . Affected rows:", data.affectedRows);
-      //       // resolve(data);
-      //     });
-      //   }
-      // };
+        if (dif > 7 && returnDate == "null") {
+          const penaltyAmount = dif * 5;
+          const penaltyQuery ="UPDATE offlineBooks SET Penalty = ? WHERE UUID = ?";
+          db.query(penaltyQuery, [penaltyAmount, id], (err, data) => {
+            if (err) {
+              console.error("Error updating penalty:", err);
+              return reject(err);
+            }
+            // console.log("Update offlineBooks successful . Affected rows:", data.affectedRows);
+            // resolve(data);
+          });
+        }
+      };
   } catch (error) {
     console.error("Error in cron job:", error);
   }
